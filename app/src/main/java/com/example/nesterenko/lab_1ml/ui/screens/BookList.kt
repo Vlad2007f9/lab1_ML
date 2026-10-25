@@ -16,7 +16,7 @@ import com.example.nesterenko.lab_1ml.R
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Text
 @Composable
-fun BookList(books: List<Book>, modifier: Modifier = Modifier)
+fun BookList(books: List<Book>, onBookClick: (Int) -> Unit, modifier: Modifier = Modifier)
 {
     if(books.isEmpty())
     {
@@ -38,8 +38,9 @@ fun BookList(books: List<Book>, modifier: Modifier = Modifier)
             verticalArrangement = Arrangement.spacedBy(8.dp)
 
         ) {
-            items(books) {book ->
-                BookCard(book)
+            items(books,
+                key = {book -> book.id}) {book ->
+                BookCard(book = book, onClick = {onBookClick(book.id)})
             }
 
 

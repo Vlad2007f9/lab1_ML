@@ -21,33 +21,26 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Button
+import androidx.compose.runtime.saveable.rememberSaveable
+
 @Composable
 fun AddBookForm(
-    onAddBook : (
             title : String,
             author : String,
-            description : String?,
-            isRead: Boolean
-            ) -> Unit,
+            description : String,
+            isRead: Boolean,
+
+            onTitleChange: (String) -> Unit,
+            onAuthorChange: (String) -> Unit,
+            onDescriptionChange: (String) ->Unit,
+            onReadChange: (Boolean) -> Unit,
+
+            onSave: () -> Unit,
             onCancel: () -> Unit,
             modifier: Modifier = Modifier
     )
 {
-    var title by remember {
-        mutableStateOf("")
-    }
 
-    var author by remember {
-        mutableStateOf("")
-    }
-
-    var description by remember {
-        mutableStateOf("")
-    }
-
-    var isRead by remember {
-        mutableStateOf(false)
-    }
 
     val isFormValid =
         title.isNotBlank() &&
@@ -61,9 +54,7 @@ fun AddBookForm(
     ) {
         OutlinedTextField(
             value = title,
-            onValueChange = {
-                title = it
-            },
+            onValueChange = onTitleChange,
             label = {
                 Text(
                     stringResource(R.string.book_title)
@@ -75,9 +66,7 @@ fun AddBookForm(
 
         OutlinedTextField(
             value = author,
-            onValueChange = {
-                author = it
-            },
+            onValueChange = onAuthorChange,
             label = {
                 Text(
                     stringResource(R.string.book_author)
@@ -88,9 +77,7 @@ fun AddBookForm(
         )
         OutlinedTextField(
             value = description,
-            onValueChange = {
-                description = it
-            },
+            onValueChange = onDescriptionChange,
             label = {
                 Text(
                     stringResource(R.string.book_description)
@@ -110,9 +97,7 @@ fun AddBookForm(
 
             Checkbox(
                 checked = isRead,
-                onCheckedChange = {
-                    isRead = it
-                }
+                onCheckedChange = onReadChange
             )
         }
 
@@ -130,16 +115,7 @@ fun AddBookForm(
             }
 
             Button(
-                onClick = {
-                    onAddBook(
-                        title.trim(),
-                        author.trim(),
-                        description.trim().takeIf {
-                            it.isNotEmpty()
-                        },
-                        isRead
-                    )
-                },
+                onClick = onSave,
                 enabled = isFormValid
             )
             {

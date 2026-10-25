@@ -1,9 +1,9 @@
 package com.example.nesterenko.lab_1ml.model
 
-class Book(
+data class Book(
     val id: Int,
     val title: String,
     val author: String,
     val description: String?,
-    var isRead: Boolean) {
+    val isRead: Boolean) {
 }

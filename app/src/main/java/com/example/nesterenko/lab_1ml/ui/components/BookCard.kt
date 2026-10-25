@@ -15,9 +15,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.example.nesterenko.lab_1ml.R
 
 @Composable
-fun BookCard(book: Book, modifier:Modifier = Modifier)
+fun BookCard(book: Book, onClick: () -> Unit, modifier:Modifier = Modifier)
 {
-    Card(modifier = modifier.fillMaxWidth())
+    Card( onClick = onClick,  modifier = modifier.fillMaxWidth())
     {
         Column(
             modifier = Modifier.padding(16.dp),

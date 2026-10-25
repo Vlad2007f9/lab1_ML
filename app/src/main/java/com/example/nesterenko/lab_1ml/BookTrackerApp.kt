@@ -16,108 +16,157 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.example.nesterenko.lab_1ml.ui.screens.AddBookForm
 import androidx.compose.material3.FloatingActionButton
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
+import com.example.nesterenko.lab_1ml.navigation.AddBookRoute
+import com.example.nesterenko.lab_1ml.navigation.BookDetailsRoute
+import com.example.nesterenko.lab_1ml.navigation.BookListRoute
+import com.example.nesterenko.lab_1ml.ui.screens.AddBookScreen
+import com.example.nesterenko.lab_1ml.ui.screens.BookDetailsScreen
+import com.example.nesterenko.lab_1ml.ui.screens.BookListScreen
+import java.util.Map.entry
+
+
+private fun toggleBookRead(
+    books: List<Book>,
+    bookId: Int
+): List<Book> {
+    return books.map { book ->
+        if (book.id == bookId) {
+            book.copy(
+                isRead = !book.isRead
+            )
+        } else {
+            book
+        }
+    }
+}
+
+private val initialBooks = listOf(
+    Book(
+        id = 1,
+        title = "Clean Code",
+        author = "Robert C. Martin",
+        description = "A handbook of agile software craftsmanship.",
+        isRead = true
+    ),
+    Book(
+        id = 2,
+        title = "Kotlin in Action",
+        author = "Dmitry Jemerov, Svetlana Isakova",
+        description = null,
+        isRead = false
+    ),
+    Book(
+        id = 3,
+        title = "Refactoring",
+        author = "Martin Fowler",
+        description = "Improving the design of existing code.",
+        isRead = false
+    )
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookTrackerApp() {
     var books by remember {
         mutableStateOf(
-            listOf(
-                Book(g
-                    id = 1,
-                    title = "Clean Code",
-                    author = "Robert C. Martin",
-                    description =
-                        "A handbook of agile software craftsmanship.",
-                    isRead = true
-                ),
-                Book(
-                    id = 2,
-                    title = "Kotlin in Action",
-                    author =
-                        "Dmitry Jemerov, Svetlana Isakova",
-                    description = null,
-                    isRead = false
-                ),
-                Book(
-                    id = 3,
-                    title = "Refactoring",
-                    author = "Martin Fowler",
-                    description =
-                        "Improving the design of existing code.",
-                    isRead = false
-                )
-            )
+            initialBooks
         )
     }
 
-    var showAddForm by remember {
-        mutableStateOf(false)
-    }
+    val backStack =
+        rememberNavBackStack(
+            BookListRoute
+        )
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = if (showAddForm) {
-                            stringResource(R.string.add_book_title)
-                        } else {
-                            stringResource(R.string.books_title)
-                        }
-                    )
-                }
-            )
+
+    NavDisplay(
+        backStack = backStack,
+
+        onBack = {
+            backStack.removeLastOrNull()
         },
-        floatingActionButton = {
-            if (!showAddForm) {
-                FloatingActionButton(
-                    onClick = {
-                        showAddForm = true
+
+        entryProvider = entryProvider {
+            entry<BookListRoute> {
+
+                BookListScreen(
+                    books = books,
+
+                    onBookClick = { bookId ->
+                        backStack.add(
+                            BookDetailsRoute(
+                                bookId = bookId
+                            )
+                        )
+                    },
+
+                    onAddBook = {
+                        backStack.add(
+                            AddBookRoute
+                        )
                     }
-                ) {
-                    Text("+")
-                }
+                )
             }
-        }
-    ) { innerPadding ->
-        if (showAddForm) {
-            AddBookForm(
-                modifier = Modifier.padding(innerPadding),
-                onCancel = {
-                    showAddForm = false
-                },
-                onAddBook = {
-                        title,
-                        author,
-                        description,
-                        isRead ->
 
-                    val nextId =
-                        (books.maxOfOrNull {
-                            it.id
-                        } ?: 0) + 1
+            entry<AddBookRoute> {
 
-                    val newBook = Book(
-                        id = nextId,
-                        title = title,
-                        author = author,
-                        description = description,
-                        isRead = isRead
-                    )
+                AddBookScreen(
+                    onCancel = {
+                        backStack.removeLastOrNull()
+                    },
 
-                    books = books + newBook
+                    onAddBook = {
+                            title,
+                            author,
+                            description,
+                            isRead ->
 
-                    showAddForm = false
+                        val nextId =
+                            (books.maxOfOrNull {
+                                it.id
+                            } ?: 0) + 1
+
+                        books = books + Book(
+                            id = nextId,
+                            title = title,
+                            author = author,
+                            description = description,
+                            isRead = isRead
+                        )
+
+                        backStack.removeLastOrNull()
+                    }
+                )
+            }
+
+            entry<BookDetailsRoute> { route ->
+
+                val book = books.find {
+                    it.id == route.bookId
                 }
-            )
-        } else {
-            BookList(
-                books = books,
-                modifier = Modifier.padding(innerPadding)
-            )
+
+                BookDetailsScreen(
+                    book = book,
+
+                    onBack = {
+                        backStack.removeLastOrNull()
+                    },
+
+                    onToggleRead = {
+                        books = toggleBookRead(
+                            books = books,
+                            bookId = route.bookId
+                        )
+                    }
+                )
+            }
+
+
+
         }
-    }
+    )
 
 }
