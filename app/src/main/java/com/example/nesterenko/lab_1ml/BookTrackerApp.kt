@@ -16,6 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.example.nesterenko.lab_1ml.ui.screens.AddBookForm
 import androidx.compose.material3.FloatingActionButton
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
@@ -26,55 +27,20 @@ import com.example.nesterenko.lab_1ml.ui.screens.AddBookScreen
 import com.example.nesterenko.lab_1ml.ui.screens.BookDetailsScreen
 import com.example.nesterenko.lab_1ml.ui.screens.BookListScreen
 import java.util.Map.entry
+import com.example.nesterenko.lab_1ml.ui.BookViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 
-private fun toggleBookRead(
-    books: List<Book>,
-    bookId: Int
-): List<Book> {
-    return books.map { book ->
-        if (book.id == bookId) {
-            book.copy(
-                isRead = !book.isRead
-            )
-        } else {
-            book
-        }
-    }
-}
 
-private val initialBooks = listOf(
-    Book(
-        id = 1,
-        title = "Clean Code",
-        author = "Robert C. Martin",
-        description = "A handbook of agile software craftsmanship.",
-        isRead = true
-    ),
-    Book(
-        id = 2,
-        title = "Kotlin in Action",
-        author = "Dmitry Jemerov, Svetlana Isakova",
-        description = null,
-        isRead = false
-    ),
-    Book(
-        id = 3,
-        title = "Refactoring",
-        author = "Martin Fowler",
-        description = "Improving the design of existing code.",
-        isRead = false
-    )
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookTrackerApp() {
-    var books by remember {
-        mutableStateOf(
-            initialBooks
-        )
-    }
+
+    val bookViewModel: BookViewModel = viewModel(factory = BookViewModel.Factory)
+
+    val uiState by bookViewModel.uiState.collectAsStateWithLifecycle()
 
     val backStack =
         rememberNavBackStack(
@@ -93,7 +59,7 @@ fun BookTrackerApp() {
             entry<BookListRoute> {
 
                 BookListScreen(
-                    books = books,
+                    books = uiState.books,
 
                     onBookClick = { bookId ->
                         backStack.add(
@@ -124,13 +90,7 @@ fun BookTrackerApp() {
                             description,
                             isRead ->
 
-                        val nextId =
-                            (books.maxOfOrNull {
-                                it.id
-                            } ?: 0) + 1
-
-                        books = books + Book(
-                            id = nextId,
+                        bookViewModel.addBook(
                             title = title,
                             author = author,
                             description = description,
@@ -144,7 +104,7 @@ fun BookTrackerApp() {
 
             entry<BookDetailsRoute> { route ->
 
-                val book = books.find {
+                val book = uiState.books.find {
                     it.id == route.bookId
                 }
 
@@ -156,10 +116,7 @@ fun BookTrackerApp() {
                     },
 
                     onToggleRead = {
-                        books = toggleBookRead(
-                            books = books,
-                            bookId = route.bookId
-                        )
+                       bookViewModel.toggleBookRead(route.bookId)
                     }
                 )
             }
